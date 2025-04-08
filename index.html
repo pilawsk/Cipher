@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Cipher Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Advanced Cipher Tool</h1>
+
+    <div class="input-section">
+      <label for="message">Enter Message:</label>
+      <textarea id="message" rows="5" cols="50"></textarea>
+    </div>
+
+    <div class="input-section">
+      <label for="key">Enter Key:</label>
+      <input type="text" id="key" />
+    </div>
+
+    <div class="buttons">
+      <button onclick="encryptMessage()">Encrypt</button>
+      <button onclick="decryptMessage()">Decrypt</button>
+    </div>
+
+    <div class="result">
+      <h3>Result:</h3>
+      <textarea id="result" rows="5" cols="50" readonly></textarea>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
