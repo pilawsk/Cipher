@@ -1,5 +1,6 @@
 const VALID_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"%&*()_-+={[}]:;@'~#>.<,?/|\\";
 
+// Substitution Cipher
 function substitutionEncrypt(message, key) {
   let rng = seedRandom(key + "substitution");
   let permuted = VALID_CHARACTERS.split("");
@@ -25,6 +26,7 @@ function substitutionDecrypt(message, key) {
   return message.split("").map(char => invMapping[char] || char).join("");
 }
 
+// Transposition Cipher
 function transposeEncrypt(message, key, numCols) {
   const n = message.length;
   const numRows = Math.ceil(n / numCols);
@@ -76,10 +78,12 @@ function transposeDecrypt(message, key, numCols) {
   return original.replace(/X+$/, "");
 }
 
+// XOR Cipher
 function xorCipher(message, key) {
   return message.split("").map((char, i) => String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length))).join("");
 }
 
+// Format groups (3 to 5 characters)
 function formatGroups(message) {
   let groups = [];
   const pattern = [3, 4, 5];
@@ -93,6 +97,7 @@ function formatGroups(message) {
   return groups.join(" ");
 }
 
+// Encryption handler
 function encryptMessage() {
   const message = document.getElementById("message").value;
   const key = document.getElementById("key").value;
@@ -102,19 +107,34 @@ function encryptMessage() {
     return;
   }
 
-  // Use the correct encryption function (e.g., 'encrypt' instead of calling encryptMessage recursively)
-  const encrypted = encrypt(message, key);  // Call 'encrypt' instead of 'encryptMessage'
-  document.getElementById("result").value = encrypted;
+  const numCols = (key.length % 3) + 3;
+  let encrypted = xorCipher(message, key);
+  encrypted = transposeEncrypt(encrypted, key, numCols);
+  encrypted = substitutionEncrypt(encrypted, key);
+
+  // Format the encrypted message with groups of characters
+  document.getElementById("result").value = formatGroups(encrypted);
 }
 
-function decryptMessage(ciphertext, key) {
-  let text = ciphertext.replace(/\s+/g, "");
-  let xored = xorCipher(text, key);
-  let numCols = (key.length % 3) + 3;
-  let trans = transposeDecrypt(xored, key, numCols);
-  return substitutionDecrypt(trans, key);
+// Decryption handler
+function decryptMessage() {
+  const message = document.getElementById("message").value;
+  const key = document.getElementById("key").value;
+
+  if (!key) {
+    document.getElementById("result").value = "Key must not be empty!";
+    return;
+  }
+
+  const numCols = (key.length % 3) + 3;
+  let decrypted = substitutionDecrypt(message, key);
+  decrypted = transposeDecrypt(decrypted, key, numCols);
+  decrypted = xorCipher(decrypted, key);
+
+  document.getElementById("result").value = decrypted;
 }
 
+// Random seed generator (includes seedrandom library)
 function seedRandom(seed) {
   const rng = new Math.seedrandom(seed);
   return {
@@ -129,26 +149,4 @@ function seedRandom(seed) {
       }
     }
   };
-}
-
-function encryptMessage() {
-  const message = document.getElementById("message").value;
-  const key = document.getElementById("key").value;
-  if (!key) {
-    document.getElementById("result").value = "Key must not be empty!";
-    return;
-  }
-  const encrypted = encryptMessage(message, key);
-  document.getElementById("result").value = encrypted;
-}
-
-function decryptMessage() {
-  const message = document.getElementById("message").value;
-  const key = document.getElementById("key").value;
-  if (!key) {
-    document.getElementById("result").value = "Key must not be empty!";
-    return;
-  }
-  const decrypted = decryptMessage(message, key);
-  document.getElementById("result").value = decrypted;
 }
