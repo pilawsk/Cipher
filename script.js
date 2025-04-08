@@ -93,12 +93,18 @@ function formatGroups(message) {
   return groups.join(" ");
 }
 
-function encryptMessage(message, key) {
-  let numCols = (key.length % 3) + 3;
-  let sub = substitutionEncrypt(message, key);
-  let trans = transposeEncrypt(sub, key, numCols);
-  let xored = xorCipher(trans, key);
-  return formatGroups(xored);
+function encryptMessage() {
+  const message = document.getElementById("message").value;
+  const key = document.getElementById("key").value;
+
+  if (!key) {
+    document.getElementById("result").value = "Key must not be empty!";
+    return;
+  }
+
+  // Use the correct encryption function (e.g., 'encrypt' instead of calling encryptMessage recursively)
+  const encrypted = encrypt(message, key);  // Call 'encrypt' instead of 'encryptMessage'
+  document.getElementById("result").value = encrypted;
 }
 
 function decryptMessage(ciphertext, key) {
