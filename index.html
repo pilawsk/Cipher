@@ -2,38 +2,146 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Advanced Cipher Tool</title>
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Link to external JavaScript file -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.3/seedrandom.min.js"></script>
-  <script src="script.js" defer></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Advanced Post Cipher</title>
+  <style>
+    /* Dark mode base style */
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 2em;
+    }
+    h1, h2 {
+      color: #ffca28;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+      font-weight: bold;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 0.5em;
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      color: #e0e0e0;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    .buttons {
+      margin-top: 1em;
+    }
+    button {
+      background-color: #ffca28;
+      color: #121212;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
+      margin-right: 1em;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #ffc107;
+    }
+    .output {
+      margin-top: 1em;
+      padding: 10px;
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      min-height: 50px;
+      word-wrap: break-word;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>Advanced Cipher Tool</h1>
-
-    <div class="input-section">
-      <label for="message">Enter Message:</label>
-      <textarea id="message" rows="5" cols="50"></textarea>
-    </div>
-
-    <div class="input-section">
-      <label for="key">Enter Key:</label>
-      <input type="text" id="key" />
-    </div>
+    <h1>Advanced Post Cipher</h1>
+    <label for="inputText">Enter Text:</label>
+    <textarea id="inputText" rows="4" placeholder="Type your message here..."></textarea>
+    
+    <label for="keyText">Enter Key:</label>
+    <input id="keyText" type="text" placeholder="Your encryption/decryption key" />
 
     <div class="buttons">
-      <button onclick="encryptMessage()">Encrypt</button>
-      <button onclick="decryptMessage()">Decrypt</button>
+      <button onclick="encryptText()">Encrypt</button>
+      <button onclick="decryptText()">Decrypt</button>
     </div>
 
-    <div class="result">
-      <h3>Result:</h3>
-      <textarea id="result" rows="5" cols="50" readonly></textarea>
-    </div>
+    <h2>Output:</h2>
+    <div id="output" class="output"></div>
   </div>
+
+  <script>
+    // Define the allowed characters for the cipher.
+    const charset = "abcdefghijklmnopqrstuvwxyz0123456789";
+    const charsetLength = charset.length;
+
+    // Utility: Clean input to lower case and remove characters outside the charset.
+    function sanitizeInput(text) {
+      return text.toLowerCase().split('').filter(ch => charset.includes(ch)).join('');
+    }
+
+    // Vigenère-style encryption using our charset.
+    function encrypt(text, key) {
+      text = sanitizeInput(text);
+      key = sanitizeInput(key);
+      if (key.length === 0) {
+        alert("Please enter a valid key using characters from the post cipher set.");
+        return "";
+      }
+      let cipher = "";
+      for (let i = 0; i < text.length; i++) {
+        const textIndex = charset.indexOf(text[i]);
+        // Use key characters in a repeating fashion if key is shorter than the text.
+        const keyIndex = charset.indexOf(key[i % key.length]);
+        // Combine using mod arithmetic.
+        const cipherIndex = (textIndex + keyIndex) % charsetLength;
+        cipher += charset[cipherIndex];
+      }
+      return cipher;
+    }
+
+    // Vigenère-style decryption using our charset.
+    function decrypt(cipher, key) {
+      cipher = sanitizeInput(cipher);
+      key = sanitizeInput(key);
+      if (key.length === 0) {
+        alert("Please enter a valid key using characters from the post cipher set.");
+        return "";
+      }
+      let text = "";
+      for (let i = 0; i < cipher.length; i++) {
+        const cipherIndex = charset.indexOf(cipher[i]);
+        const keyIndex = charset.indexOf(key[i % key.length]);
+        // Reverse the operation taking care of negative values.
+        const textIndex = (cipherIndex - keyIndex + charsetLength) % charsetLength;
+        text += charset[textIndex];
+      }
+      return text;
+    }
+
+    // Event handlers for button clicks.
+    function encryptText() {
+      const input = document.getElementById("inputText").value;
+      const key = document.getElementById("keyText").value;
+      const result = encrypt(input, key);
+      document.getElementById("output").innerText = result;
+    }
+
+    function decryptText() {
+      const input = document.getElementById("inputText").value;
+      const key = document.getElementById("keyText").value;
+      const result = decrypt(input, key);
+      document.getElementById("output").innerText = result;
+    }
+  </script>
 </body>
 </html>
+
