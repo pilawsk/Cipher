@@ -1,147 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Advanced Post Cipher</title>
-  <style>
-    /* Dark mode base style */
-    body {
-      background-color: #121212;
-      color: #e0e0e0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 2em;
-    }
-    h1, h2 {
-      color: #ffca28;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-    }
-    label {
-      display: block;
-      margin-top: 1em;
-      font-weight: bold;
-    }
-    textarea, input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      margin-top: 0.5em;
-      background-color: #1e1e1e;
-      border: 1px solid #333;
-      color: #e0e0e0;
-      font-size: 1em;
-      box-sizing: border-box;
-    }
-    .buttons {
-      margin-top: 1em;
-    }
-    button {
-      background-color: #ffca28;
-      color: #121212;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1em;
-      margin-right: 1em;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #ffc107;
-    }
-    .output {
-      margin-top: 1em;
-      padding: 10px;
-      background-color: #1e1e1e;
-      border: 1px solid #333;
-      min-height: 50px;
-      word-wrap: break-word;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberCrypt Vault</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --text: #ffff00;
+            --primary: #ffd700;
+            --secondary: #2a2a2a;
+        }
+        body {
+            font-family: 'Inconsolata', monospace;
+            background-color: var(--bg);
+            color: var(--text);
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .container {
+            background: var(--secondary);
+            padding: 2rem;
+            border-radius: 5px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 25px rgba(255,255,0,0.1);
+        }
+        textarea, input {
+            width: 100%;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            background: #121212;
+            border: 1px solid #ffd700;
+            color: var(--text);
+            border-radius: 3px;
+            font-family: 'Inconsolata', monospace;
+            font-size: 14px;
+        }
+        button {
+            background: var(--primary);
+            color: var(--bg);
+            border: 2px solid #ffff00;
+            padding: 1rem 2rem;
+            margin: 10px 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #000000;
+            color: #ffff00;
+        }
+        .warning {
+            color: #ff4444;
+            border-left: 3px solid #ff4444;
+            padding-left: 10px;
+            margin: 1rem 0;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Advanced Post Cipher</h1>
-    <label for="inputText">Enter Text:</label>
-    <textarea id="inputText" rows="4" placeholder="Type your message here..."></textarea>
-    
-    <label for="keyText">Enter Key:</label>
-    <input id="keyText" type="text" placeholder="Your encryption/decryption key" />
-
-    <div class="buttons">
-      <button onclick="encryptText()">Encrypt</button>
-      <button onclick="decryptText()">Decrypt</button>
+    <div class="container">
+        <h1>🖥 CYBERCRYPT VAULT 2.0</h1>
+        <p class="warning">SECURITY NOTICE: Always verify your encryption key. Data loss is irreversible.</p>
+        
+        <label for="message">Input Message:</label>
+        <textarea id="message" rows="4" placeholder="Enter plaintext or ciphertext"></textarea>
+        
+        <label for="key">Encryption Key:</label>
+        <input type="password" id="key" placeholder="Minimum 8 characters">
+        
+        <div>
+            <button onclick="encrypt()">ENCRYPT</button>
+            <button onclick="decrypt()">DECRYPT</button>
+        </div>
+        
+        <label for="output">Secure Output:</label>
+        <textarea id="output" rows="4" readonly></textarea>
     </div>
 
-    <h2>Output:</h2>
-    <div id="output" class="output"></div>
-  </div>
+    <script>
+        // Web Crypto API polyfill check
+        if (!window.crypto || !window.crypto.subtle) {
+            alert('CRYPTO SYSTEM FAILURE: Browser security requirements not met');
+            throw new Error('Unsupported browser');
+        }
 
-  <script>
-    // Define the allowed characters for the cipher.
-    const charset = "abcdefghijklmnopqrstuvwxyz0123456789";
-    const charsetLength = charset.length;
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
 
-    // Utility: Clean input to lower case and remove characters outside the charset.
-    function sanitizeInput(text) {
-      return text.toLowerCase().split('').filter(ch => charset.includes(ch)).join('');
-    }
+        async function deriveKey(password, salt, iterations = 100000) {
+            const keyMaterial = await window.crypto.subtle.importKey(
+                "raw",
+                encoder.encode(password),
+                "PBKDF2",
+                false,
+                ["deriveKey"]
+            );
+            
+            return await window.crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: iterations,
+                    hash: "SHA-512"
+                },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                true,
+                ["encrypt", "decrypt"]
+            );
+        }
 
-    // Vigenère-style encryption using our charset.
-    function encrypt(text, key) {
-      text = sanitizeInput(text);
-      key = sanitizeInput(key);
-      if (key.length === 0) {
-        alert("Please enter a valid key using characters from the post cipher set.");
-        return "";
-      }
-      let cipher = "";
-      for (let i = 0; i < text.length; i++) {
-        const textIndex = charset.indexOf(text[i]);
-        // Use key characters in a repeating fashion if key is shorter than the text.
-        const keyIndex = charset.indexOf(key[i % key.length]);
-        // Combine using mod arithmetic.
-        const cipherIndex = (textIndex + keyIndex) % charsetLength;
-        cipher += charset[cipherIndex];
-      }
-      return cipher;
-    }
+        async function encrypt() {
+            try {
+                const message = encoder.encode(document.getElementById('message').value);
+                const password = document.getElementById('key').value;
+                
+                const salt = window.crypto.getRandomValues(new Uint8Array(16));
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                
+                const key = await deriveKey(password, salt);
+                const encryptedContent = await window.crypto.subtle.encrypt(
+                    { name: "AES-GCM", iv: iv },
+                    key,
+                    message
+                );
+                
+                const combined = new Uint8Array(salt.byteLength + iv.byteLength + encryptedContent.byteLength);
+                combined.set(salt, 0);
+                combined.set(iv, salt.byteLength);
+                combined.set(new Uint8Array(encryptedContent), salt.byteLength + iv.byteLength);
+                
+                const armored = btoa(String.fromCharCode(...combined))
+                    .replace(/\//g, '_').replace(/\+/g, '-').replace(/=+$/, '');
+                
+                document.getElementById('output').value = `CRYPT://${armored}`;
+            } catch (error) {
+                alert(`ENCRYPTION FAILURE: ${error.message}`);
+            }
+        }
 
-    // Vigenère-style decryption using our charset.
-    function decrypt(cipher, key) {
-      cipher = sanitizeInput(cipher);
-      key = sanitizeInput(key);
-      if (key.length === 0) {
-        alert("Please enter a valid key using characters from the post cipher set.");
-        return "";
-      }
-      let text = "";
-      for (let i = 0; i < cipher.length; i++) {
-        const cipherIndex = charset.indexOf(cipher[i]);
-        const keyIndex = charset.indexOf(key[i % key.length]);
-        // Reverse the operation taking care of negative values.
-        const textIndex = (cipherIndex - keyIndex + charsetLength) % charsetLength;
-        text += charset[textIndex];
-      }
-      return text;
-    }
+        async function decrypt() {
+            try {
+                const armored = document.getElementById('output').value.replace('CRYPT://', '');
+                const password = document.getElementById('key').value;
+                
+                const binary = Uint8Array.from(atob(armored.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+                
+                const salt = binary.slice(0, 16);
+                const iv = binary.slice(16, 28);
+                const ciphertext = binary.slice(28);
+                
+                const key = await deriveKey(password, salt);
+                const decryptedContent = await window.crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: iv },
+                    key,
+                    ciphertext
+                );
+                
+                document.getElementById('message').value = decoder.decode(decryptedContent);
+            } catch (error) {
+                alert('DECRYPTION FAILURE: Invalid key or corrupted data');
+            }
+        }
 
-    // Event handlers for button clicks.
-    function encryptText() {
-      const input = document.getElementById("inputText").value;
-      const key = document.getElementById("keyText").value;
-      const result = encrypt(input, key);
-      document.getElementById("output").innerText = result;
-    }
-
-    function decryptText() {
-      const input = document.getElementById("inputText").value;
-      const key = document.getElementById("keyText").value;
-      const result = decrypt(input, key);
-      document.getElementById("output").innerText = result;
-    }
-  </script>
+        // Security features
+        document.getElementById('key').addEventListener('input', () => {
+            if (document.getElementById('key').value.length < 8) {
+                document.getElementById('key').style.borderColor = '#ff4444';
+            } else {
+                document.getElementById('key').style.borderColor = '#ffd700';
+            }
+        });
+    </script>
 </body>
 </html>
-
